@@ -97,6 +97,7 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/taskflow-key.pem
           chmod 600 ~/.ssh/taskflow-key.pem
+          ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
 
       - name: Create Ansible inventory
         run: |
