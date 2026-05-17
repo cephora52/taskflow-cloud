@@ -1,0 +1,62 @@
+name: Taskflow CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+
+  devsecops-pipeline:
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Build Spring Boot project
+        run: mvn clean package -DskipTests
+
+      - name: Terraform Init
+        working-directory: terraform
+        run: terraform init
+
+      - name: Terraform Validate
+        working-directory: terraform
+        run: terraform validate
+
+      - name: Terraform Plan
+        working-directory: terraform
+        run: terraform plan
+
+      - name: Install Checkov
+        run: pip install checkov
+
+      - name: Run Checkov Scan
+        working-directory: terraform
+        run: checkov -d .
+        continue-on-error: true
+
+      - name: Install Ansible
+        run: sudo apt-get update && sudo apt-get install -y ansible
+
+      - name: Setup SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/taskflow-key.pem
+          chmod 600 ~/.ssh/taskflow-key.pem
+
+      - name: Create Ansible inventory
+        run: |
+          echo "[web]" > ansible/hosts.ini
+          echo "${{ secrets.EC2_HOST }} ansible_user=ubuntu ansible_ssh_private_key_file=~/.ssh/taskflow-key.pem" >> ansible/hosts.ini
+
+      - name: Run Ansible Deploy
+        run: ansible-playbook -i ansible/hosts.ini ansible/deploy.yml

@@ -13,14 +13,6 @@ public class UsersDTO {
     public UsersDTO() {
     }
 
-    public UsersDTO(Integer id, String fullName, String email, String password, Date createdAt) {
-        this.id = id;
-        this.fullName = fullName;
-        this.email = email;
-        this.password = password;
-        this.createdAt = createdAt;
-    }
-
     public Integer getId() {
         return id;
     }

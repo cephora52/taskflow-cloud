@@ -1,0 +1,27 @@
+- hosts: web
+  become: yes
+
+  tasks:
+
+    - name: Update apt
+      apt:
+        update_cache: yes
+
+    - name: Install Java
+      apt:
+        name: openjdk-17-jdk
+        state: present
+
+    - name: Create app directory
+      file:
+        path: /home/ubuntu/app
+        state: directory
+
+    - name: Copy jar file
+      copy:
+        src: ../target/taskflow_cloud-0.0.1-SNAPSHOT.jar
+        dest: /home/ubuntu/app/taskflow.jar
+
+    - name: Run Spring Boot application
+      shell: |
+        nohup java -jar /home/ubuntu/app/taskflow.jar > /home/ubuntu/app/app.log 2>&1 &
